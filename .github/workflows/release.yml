@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
       - name: Check project
@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
       - name: Install dependencies
@@ -56,4 +56,3 @@ jobs:
         with:
           name: freecad-mcp-release-dry-run
           path: dist/*
-
