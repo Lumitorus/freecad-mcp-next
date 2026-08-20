@@ -17,6 +17,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
       version: ${{ steps.release.outputs.version }}
+      release_sha: ${{ steps.release.outputs.sha }}
     steps:
       - name: Create or update release pull request
         id: release
@@ -38,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release-please.outputs.release_sha }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -63,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release-please.outputs.release_sha }}
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
