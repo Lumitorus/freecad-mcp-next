@@ -1,0 +1,59 @@
+name: Release build dry run
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: dry-run gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Check project
+        run: |
+          uv sync --dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest
+          uv run python -m compileall -q Init.py InitGui.py rpc_server
+          uv build --out-dir build-check
+          uv run twine check build-check/*
+
+  package:
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Build distributions
+        run: |
+          uv build
+          uv run twine check dist/*
+          uv run python scripts/build_addon.py
+          sha256sum dist/*.whl dist/*.tar.gz > dist/python-distributions.sha256
+      - name: Upload dry-run artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: freecad-mcp-release-dry-run
+          path: dist/*
+

@@ -80,7 +80,9 @@ the foundation of this project.
 ## Development and releases
 
 Pull requests run linting, unit tests, package builds, and addon validation on
-Windows, macOS, and Linux. A `v*` tag creates:
+Windows, macOS, and Linux. Release Please maintains a version/changelog PR from
+Conventional Commits. Merging that PR creates a draft release, verifies it on all
+three operating systems, attaches the artifacts, and publishes it:
 
 - a Python wheel and source distribution;
 - `FreeCADMCP-<version>.zip` for manual FreeCAD installation;

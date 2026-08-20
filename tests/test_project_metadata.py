@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tomllib
 import zipfile
 from pathlib import Path
@@ -53,3 +54,16 @@ def test_continue_ollama_example_is_valid() -> None:
     assert config["models"][0]["provider"] == "ollama"
     assert config["mcpServers"][0]["command"] == "uv"
     assert config["mcpServers"][0]["args"][-1] == "freecad-mcp"
+
+
+def test_release_please_updates_both_version_files() -> None:
+    config = json.loads((ROOT / "release-please-config.json").read_text(encoding="utf-8"))
+    manifest = json.loads((ROOT / ".release-please-manifest.json").read_text(encoding="utf-8"))
+    package = (ROOT / "package.xml").read_text(encoding="utf-8")
+
+    project = config["packages"]["."]
+    assert project["release-type"] == "python"
+    assert {item["path"] for item in project["extra-files"]} == {"package.xml"}
+    assert "x-release-please-version" in package
+    assert manifest["."] == "0.1.0"
+    assert "## 0.1.0" in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")

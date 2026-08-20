@@ -1,0 +1,110 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Create or update release pull request
+        id: release
+        uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  quality:
+    name: release gate (${{ matrix.os }})
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Check release source
+        run: |
+          uv sync --dev
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pytest
+          uv run python -m compileall -q Init.py InitGui.py rpc_server
+          uv build --out-dir build-check
+          uv run twine check build-check/*
+
+  publish-assets:
+    name: publish release assets
+    needs: [release-please, quality]
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --dev
+      - name: Verify tag and metadata versions
+        shell: python
+        env:
+          RELEASE_VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          import os
+          import tomllib
+          from pathlib import Path
+          from xml.etree import ElementTree
+
+          expected = os.environ["RELEASE_VERSION"]
+          project = tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"]
+          addon = ElementTree.parse("package.xml").getroot().findtext("{*}version")
+          if len({expected, project, addon}) != 1:
+              raise SystemExit(
+                  f"Version mismatch: release={expected}, pyproject={project}, addon={addon}"
+              )
+      - name: Build distributions
+        run: |
+          uv build
+          uv run twine check dist/*
+          uv run python scripts/build_addon.py
+          sha256sum dist/*.whl dist/*.tar.gz > dist/python-distributions.sha256
+      - name: Upload assets and publish draft release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          gh release upload "${TAG_NAME}" dist/* --clobber
+          gh release edit "${TAG_NAME}" --draft=false --latest
+
+      # Enable after configuring PyPI Trusted Publishing and a protected
+      # GitHub environment named "pypi":
+      # - name: Publish Python package
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+
