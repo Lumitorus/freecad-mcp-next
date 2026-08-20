@@ -65,5 +65,11 @@ def test_release_please_updates_both_version_files() -> None:
     assert project["release-type"] == "python"
     assert {item["path"] for item in project["extra-files"]} == {"package.xml"}
     assert "x-release-please-version" in package
-    assert manifest["."] == "0.1.0"
-    assert "## 0.1.0" in (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+
+    version = manifest["."]
+    version_parts = version.split(".")
+    assert len(version_parts) == 3
+    assert all(part.isdigit() for part in version_parts)
+
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert any(heading in changelog for heading in (f"## [{version}]", f"## {version}"))
