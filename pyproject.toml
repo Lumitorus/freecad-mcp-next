@@ -1,6 +1,6 @@
 [project]
 name = "freecad-mcp-next"
-version = "0.2.0"
+version = "0.3.0"
 description = "A cross-platform MCP bridge for controlling FreeCAD from AI coding assistants"
 readme = "README.md"
 authors = [{ name = "Lumitorus" }]
