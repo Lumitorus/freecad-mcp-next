@@ -1,0 +1,57 @@
+[project]
+name = "freecad-mcp-next"
+version = "0.2.0"
+description = "A cross-platform MCP bridge for controlling FreeCAD from AI coding assistants"
+readme = "README.md"
+authors = [{ name = "Lumitorus" }]
+maintainers = [{ name = "Lumitorus" }]
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "mcp[cli]>=1.12.2,<3",
+    "validators>=0.34.0,<1",
+]
+
+[project.scripts]
+freecad-mcp = "freecad_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/Lumitorus/freecad-mcp-next"
+Documentation = "https://github.com/Lumitorus/freecad-mcp-next#readme"
+Issues = "https://github.com/Lumitorus/freecad-mcp-next/issues"
+Source = "https://github.com/Lumitorus/freecad-mcp-next"
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2,<2",
+    "pytest>=8.3,<10",
+    "pyyaml>=6.0,<7",
+    "ruff>=0.12,<1",
+    "twine>=6.1,<7",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["assets", "artifacts", "results"]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/freecad_mcp"]
+core-metadata-version = "2.4"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["InitGui.py", "examples", "rpc_server"]
+
+[tool.ruff.lint]
+select = ["F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --basetemp=.pytest-tmp"
+pythonpath = ["."]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

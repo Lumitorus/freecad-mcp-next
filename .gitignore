@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.pytest_cache/
+.pytest-tmp/
+.ruff_cache/
+.venv/
+build/
+build-check/
+dist/
+artifacts/
+freecad-mcp.log
+.DS_Store
+Thumbs.db
+.vscode/mcp.json

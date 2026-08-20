@@ -1,0 +1,26 @@
+name: FreeCAD MCP with Ollama
+version: 1.0.0
+schema: v1
+
+models:
+  - name: Local tool-capable model
+    provider: ollama
+    model: qwen3-coder:30b
+    apiBase: http://localhost:11434
+    roles:
+      - chat
+      - edit
+      - apply
+    capabilities:
+      - tool_use
+
+mcpServers:
+  - name: FreeCAD MCP
+    command: uv
+    args:
+      - --directory
+      - C:\path\to\freecad-mcp-next
+      - run
+      - freecad-mcp
+    connectionTimeout: 10000
+

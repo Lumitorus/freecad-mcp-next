@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "freecad": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "--directory",
+        "C:\\path\\to\\freecad-mcp-next",
+        "run",
+        "freecad-mcp"
+      ]
+    }
+  }
+}
+
